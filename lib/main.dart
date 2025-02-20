@@ -15,6 +15,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   String petName = "Your Pet";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  TextEditingController nameController = TextEditingController();
+  bool nameSet = false;
 
   // Get pet image and background color based on happiness level
   Map<String, dynamic> getPetMood() {
@@ -43,7 +45,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Text(
@@ -54,6 +56,14 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         ),
       ),
     );
+  }
+
+  void _setPetName() {
+    setState(() {
+      petName =
+          nameController.text.isNotEmpty ? nameController.text : "Your Pet";
+      nameSet = true;
+    });
   }
 
   void _playWithPet() {
@@ -99,32 +109,51 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(
-              width: 200,
-              height: 200,
-              child: Image.asset(
-                petMood['image'],
-                fit: BoxFit.contain,
+            if (!nameSet) ...[
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: "Enter Pet Name",
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
               ),
-            ),
-            SizedBox(height: 24.0),
-            _buildTextWithBackground('Name: $petName'),
-            SizedBox(height: 16.0),
-            _buildTextWithBackground('Happiness Level: $happinessLevel'),
-            SizedBox(height: 16.0),
-            _buildTextWithBackground('Hunger Level: $hungerLevel'),
-            SizedBox(height: 16.0),
-            _buildTextWithBackground('Mood: ${petMood['mood']}'),
-            SizedBox(height: 32.0),
-            ElevatedButton(
-              onPressed: _playWithPet,
-              child: Text('Play with Your Pet'),
-            ),
-            SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _feedPet,
-              child: Text('Feed Your Pet'),
-            ),
+              ElevatedButton(
+                onPressed: _setPetName,
+                child: Text("Set Name"),
+              ),
+            ] else ...[
+              Container(
+                width: 200,
+                height: 200,
+                child: Image.asset(
+                  petMood['image'],
+                  fit: BoxFit.contain,
+                ),
+              ),
+              SizedBox(height: 24.0),
+              _buildTextWithBackground('Name: $petName'),
+              SizedBox(height: 16.0),
+              _buildTextWithBackground('Happiness Level: $happinessLevel'),
+              SizedBox(height: 16.0),
+              _buildTextWithBackground('Hunger Level: $hungerLevel'),
+              SizedBox(height: 16.0),
+              _buildTextWithBackground('Mood: ${petMood['mood']}'),
+              SizedBox(height: 32.0),
+              ElevatedButton(
+                onPressed: _playWithPet,
+                child: Text('Play with Your Pet'),
+              ),
+              SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: _feedPet,
+                child: Text('Feed Your Pet'),
+              ),
+            ]
           ],
         ),
       ),
