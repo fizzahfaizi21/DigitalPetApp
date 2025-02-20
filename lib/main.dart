@@ -16,18 +16,44 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   int happinessLevel = 50;
   int hungerLevel = 50;
 
-  // Get pet color based on happiness level
-  Color getPetColor() {
-    if (happinessLevel > 70) {
-      return Colors.green; // Happy
+  // Get pet image and background color based on happiness level
+  Map<String, dynamic> getPetMood() {
+    if (happinessLevel > 80) {
+      return {
+        'image': 'lib/assets/happy_cat.png',
+        'color': Colors.green.withOpacity(0.3),
+      };
     } else if (happinessLevel >= 30) {
-      return Colors.yellow; // Neutral
+      return {
+        'image': 'lib/assets/content_cat.png',
+        'color': Colors.yellow.withOpacity(0.3),
+      };
     } else {
-      return Colors.red; // Unhappy
+      return {
+        'image': 'lib/assets/sad_cat.png',
+        'color': Colors.red.withOpacity(0.3),
+      };
     }
   }
 
-  // Function to increase happiness and update hunger when playing with the pet
+  Widget _buildTextWithBackground(String text) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 20.0,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  // Rest of the methods remain the same
   void _playWithPet() {
     setState(() {
       happinessLevel = (happinessLevel + 10).clamp(0, 100);
@@ -35,7 +61,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
-  // Function to decrease hunger and update happiness when feeding the pet
   void _feedPet() {
     setState(() {
       hungerLevel = (hungerLevel - 10).clamp(0, 100);
@@ -43,7 +68,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
-  // Update happiness based on hunger level
   void _updateHappiness() {
     if (hungerLevel < 30) {
       happinessLevel = (happinessLevel - 20).clamp(0, 100);
@@ -52,7 +76,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     }
   }
 
-  // Increase hunger level slightly when playing with the pet
   void _updateHunger() {
     hungerLevel = (hungerLevel + 5).clamp(0, 100);
     if (hungerLevel > 100) {
@@ -63,46 +86,31 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
 
   @override
   Widget build(BuildContext context) {
+    final petMood = getPetMood();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Digital Pet'),
       ),
+      backgroundColor: petMood['color'],
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Pet visualization
             Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: getPetColor(),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: Offset(0, 3),
-                  ),
-                ],
+              width: 200,
+              height: 200,
+              child: Image.asset(
+                petMood['image'],
+                fit: BoxFit.contain,
               ),
             ),
             SizedBox(height: 24.0),
-            Text(
-              'Name: $petName',
-              style: TextStyle(fontSize: 20.0),
-            ),
+            _buildTextWithBackground('Name: $petName'),
             SizedBox(height: 16.0),
-            Text(
-              'Happiness Level: $happinessLevel',
-              style: TextStyle(fontSize: 20.0),
-            ),
+            _buildTextWithBackground('Happiness Level: $happinessLevel'),
             SizedBox(height: 16.0),
-            Text(
-              'Hunger Level: $hungerLevel',
-              style: TextStyle(fontSize: 20.0),
-            ),
+            _buildTextWithBackground('Hunger Level: $hungerLevel'),
             SizedBox(height: 32.0),
             ElevatedButton(
               onPressed: _playWithPet,
