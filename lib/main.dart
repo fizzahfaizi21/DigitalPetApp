@@ -22,16 +22,19 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       return {
         'image': 'lib/assets/happy_cat.png',
         'color': Colors.green.withOpacity(0.3),
+        'mood': 'Happy 😊',
       };
     } else if (happinessLevel >= 30) {
       return {
         'image': 'lib/assets/content_cat.png',
         'color': Colors.yellow.withOpacity(0.3),
+        'mood': 'Neutral 😐',
       };
     } else {
       return {
         'image': 'lib/assets/sad_cat.png',
         'color': Colors.red.withOpacity(0.3),
+        'mood': 'Unhappy 😢',
       };
     }
   }
@@ -53,7 +56,6 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     );
   }
 
-  // Rest of the methods remain the same
   void _playWithPet() {
     setState(() {
       happinessLevel = (happinessLevel + 10).clamp(0, 100);
@@ -111,6 +113,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
             _buildTextWithBackground('Happiness Level: $happinessLevel'),
             SizedBox(height: 16.0),
             _buildTextWithBackground('Hunger Level: $hungerLevel'),
+            SizedBox(height: 16.0),
+            _buildTextWithBackground('Mood: ${petMood['mood']}'),
             SizedBox(height: 32.0),
             ElevatedButton(
               onPressed: _playWithPet,
