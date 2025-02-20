@@ -16,17 +16,24 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   String petName = "Your Pet";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  int energyLevel = 80; // New energy level variable
   TextEditingController nameController = TextEditingController();
   bool nameSet = false;
   Timer? hungerTimer;
+  Timer? energyTimer; // New timer for energy depletion
   Timer? winTimer;
   bool gameOver = false;
   bool wonGame = false;
+  
+  // Activity selection
+  String selectedActivity = "Play";
+  List<String> activities = ["Play", "Walk", "Train", "Rest", "Groom"];
 
   @override
   void initState() {
     super.initState();
     startHungerTimer();
+    startEnergyTimer();
   }
 
   void startHungerTimer() {
@@ -36,7 +43,19 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         if (hungerLevel >= 100 && happinessLevel <= 10) {
           gameOver = true;
           hungerTimer?.cancel();
+          energyTimer?.cancel();
           winTimer?.cancel();
+        }
+      });
+    });
+  }
+  
+  void startEnergyTimer() {
+    energyTimer = Timer.periodic(Duration(seconds: 45), (timer) {
+      setState(() {
+        energyLevel = (energyLevel - 5).clamp(0, 100);
+        if (energyLevel <= 20) {
+          happinessLevel = (happinessLevel - 5).clamp(0, 100);
         }
       });
     });
@@ -49,6 +68,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         if (happinessLevel > 80) {
           wonGame = true;
           hungerTimer?.cancel();
+          energyTimer?.cancel();
         }
       });
     });
@@ -92,6 +112,42 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       ),
     );
   }
+  
+  // Build energy bar widget
+  Widget _buildEnergyBar() {
+    Color barColor;
+    if (energyLevel > 70) {
+      barColor = Colors.green;
+    } else if (energyLevel > 30) {
+      barColor = Colors.amber;
+    } else {
+      barColor = Colors.red;
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTextWithBackground('Energy: $energyLevel'),
+        SizedBox(height: 8.0),
+        Container(
+          width: 250,
+          height: 20,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.grey),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: energyLevel / 100,
+              backgroundColor: Colors.white,
+              valueColor: AlwaysStoppedAnimation<Color>(barColor),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   void _setPetName() {
     setState(() {
@@ -101,9 +157,40 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
-  void _playWithPet() {
+  // Updated to use selected activity
+  void _performActivity() {
+    if (energyLevel < 10) {
+      // Too tired to do activities
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$petName is too tired for that activity!')),
+      );
+      return;
+    }
+    
     setState(() {
-      happinessLevel = (happinessLevel + 10).clamp(0, 100);
+      switch (selectedActivity) {
+        case "Play":
+          happinessLevel = (happinessLevel + 15).clamp(0, 100);
+          energyLevel = (energyLevel - 10).clamp(0, 100);
+          break;
+        case "Walk":
+          happinessLevel = (happinessLevel + 10).clamp(0, 100);
+          energyLevel = (energyLevel - 15).clamp(0, 100);
+          break;
+        case "Train":
+          happinessLevel = (happinessLevel + 5).clamp(0, 100);
+          energyLevel = (energyLevel - 20).clamp(0, 100);
+          break;
+        case "Rest":
+          happinessLevel = (happinessLevel + 5).clamp(0, 100);
+          energyLevel = (energyLevel + 25).clamp(0, 100);
+          break;
+        case "Groom":
+          happinessLevel = (happinessLevel + 8).clamp(0, 100);
+          energyLevel = (energyLevel - 5).clamp(0, 100);
+          break;
+      }
+      
       _updateHunger();
       if (happinessLevel > 80) {
         startWinTimer();
@@ -115,6 +202,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       hungerLevel = (hungerLevel - 10).clamp(0, 100);
       _updateHappiness();
+      // Feeding also slightly increases energy
+      energyLevel = (energyLevel + 5).clamp(0, 100);
     });
   }
 
@@ -204,10 +293,53 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                         _buildTextWithBackground('Hunger Level: $hungerLevel'),
                         SizedBox(height: 16.0),
                         _buildTextWithBackground('Mood: ${petMood['mood']}'),
+                        SizedBox(height: 16.0),
+                        // New Energy Bar
+                        _buildEnergyBar(),
                         SizedBox(height: 32.0),
-                        ElevatedButton(
-                          onPressed: _playWithPet,
-                          child: Text('Play with Your Pet'),
+                        
+                        // Activity Selection Section
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300)
+                          ),
+                          child: Column(
+                            children: [
+                              Text('Choose an Activity', 
+                                style: TextStyle(
+                                  fontSize: 18, 
+                                  fontWeight: FontWeight.bold
+                                )
+                              ),
+                              SizedBox(height: 12),
+                              DropdownButton<String>(
+                                value: selectedActivity,
+                                isExpanded: true,
+                                items: activities.map((String activity) {
+                                  return DropdownMenuItem<String>(
+                                    value: activity,
+                                    child: Text(activity),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedActivity = newValue!;
+                                  });
+                                },
+                              ),
+                              SizedBox(height: 16),
+                              ElevatedButton(
+                                onPressed: _performActivity,
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                                ),
+                                child: Text('Do Activity'),
+                              ),
+                            ],
+                          ),
                         ),
                         SizedBox(height: 16.0),
                         ElevatedButton(
@@ -219,5 +351,13 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                   ),
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    hungerTimer?.cancel();
+    energyTimer?.cancel();
+    winTimer?.cancel();
+    super.dispose();
   }
 }
